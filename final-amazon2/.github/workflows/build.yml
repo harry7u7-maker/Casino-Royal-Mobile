@@ -1,0 +1,56 @@
+name: Build Casino Royal Mobile
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Build type'
+        required: true
+        default: 'amazon'
+        type: choice
+        options:
+          - amazon
+          - googleplay
+          - preview
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 📁 Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: ⚙️ Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build Android
+        run: npx eas build --platform android --profile ${{ github.event.inputs.platform || 'amazon' }} --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: casino-royal-mobile
+          path: |
+            ./*.apk
+            ./*.aab
+          if-no-files-found: warn
