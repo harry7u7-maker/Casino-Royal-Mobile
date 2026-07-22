@@ -1,3 +1,6 @@
+*.keystore
+*.jks
+*.key
 # Ignore extracted project zip and node modules
 final-amazon2.zip
 **/node_modules/
